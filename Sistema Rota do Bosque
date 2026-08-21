@@ -1,1 +1,742 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rota do Bosque - Frente de Caixa</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f2f4f3;
+    color: #222;
+}
+
+header {
+    background: #164b2a;
+    color: white;
+    padding: 18px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 24px;
+}
+
+header p {
+    margin-top: 5px;
+    opacity: .85;
+}
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 20px;
+}
+
+.login {
+    max-width: 400px;
+    margin: 60px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 3px 15px rgba(0,0,0,.12);
+}
+
+.login h2 {
+    text-align: center;
+    color: #164b2a;
+    margin-bottom: 25px;
+}
+
+input, select, button {
+    width: 100%;
+    padding: 13px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+button {
+    background: #1f7a3b;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #165d2c;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.menu button {
+    padding: 18px 10px;
+}
+
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.08);
+}
+
+.card h2 {
+    margin-bottom: 15px;
+    color: #164b2a;
+}
+
+.produtos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+}
+
+.produto {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 15px;
+    background: #fafafa;
+}
+
+.produto strong {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.preco {
+    color: #168038;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.total {
+    font-size: 25px;
+    font-weight: bold;
+    text-align: right;
+    margin-top: 20px;
+    color: #164b2a;
+}
+
+.logout {
+    background: #b3261e;
+}
+
+.small {
+    font-size: 13px;
+    color: #666;
+}
+
+@media(max-width:600px) {
+    .container {
+        padding: 10px;
+    }
+
+    table {
+        font-size: 13px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🌿 Rota do Bosque</h1>
+    <p>Distribuidora • Frente de Caixa</p>
+</header>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login">
+    <h2>Acesso ao sistema</h2>
+
+    <input id="usuario" type="text" placeholder="Usuário">
+
+    <input id="senha" type="password" placeholder="Senha">
+
+    <button onclick="entrar()">Entrar</button>
+
+    <p id="erroLogin" style="color:red;margin-top:15px;text-align:center;"></p>
+
+    <p class="small" style="margin-top:20px;text-align:center;">
+        Sistema Rota do Bosque
+    </p>
+</div>
+
+<!-- SISTEMA -->
+<div id="sistema" class="hidden">
+
+<div class="container">
+
+    <div class="menu">
+        <button onclick="mostrar('caixa')">🛒 Frente de Caixa</button>
+        <button onclick="mostrar('produtos')">📦 Produtos</button>
+        <button onclick="mostrar('vendas')">💰 Vendas</button>
+        <button id="btnAdmin" onclick="mostrar('admin')">⚙️ Administração</button>
+        <button class="logout" onclick="sair()">Sair</button>
+    </div>
+
+    <!-- CAIXA -->
+    <section id="caixa" class="card">
+        <h2>🛒 Frente de Caixa</h2>
+
+        <input
+            id="buscaProduto"
+            type="text"
+            placeholder="Digite o nome do produto..."
+            oninput="listarProdutos()"
+        >
+
+        <div id="listaProdutos" class="produtos"></div>
+
+        <h2 style="margin-top:25px;">Carrinho</h2>
+
+        <div id="carrinho"></div>
+
+        <div class="total">
+            Total: R$ <span id="total">0,00</span>
+        </div>
+
+        <select id="pagamento">
+            <option value="">Forma de pagamento</option>
+            <option>Pix</option>
+            <option>Dinheiro</option>
+            <option>Débito</option>
+            <option>Crédito</option>
+        </select>
+
+        <button onclick="finalizarVenda()" style="margin-top:15px;">
+            FINALIZAR VENDA
+        </button>
+    </section>
+
+    <!-- PRODUTOS -->
+    <section id="produtos" class="card hidden">
+        <h2>📦 Cadastro de Produtos</h2>
+
+        <input id="nomeProduto" placeholder="Nome do produto">
+
+        <input id="precoProduto" type="number" step="0.01" placeholder="Preço">
+
+        <input id="estoqueProduto" type="number" placeholder="Estoque">
+
+        <button onclick="cadastrarProduto()">
+            Cadastrar produto
+        </button>
+
+        <div id="tabelaProdutos"></div>
+    </section>
+
+    <!-- VENDAS -->
+    <section id="vendas" class="card hidden">
+        <h2>💰 Histórico de Vendas</h2>
+
+        <div id="historico"></div>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="admin" class="card hidden">
+
+        <h2>⚙️ Administração</h2>
+
+        <p><strong>Usuário:</strong> administrador</p>
+
+        <p style="margin-top:10px;">
+            Acesso administrativo ativado.
+        </p>
+
+        <button onclick="limparVendas()" style="background:#b3261e;margin-top:20px;">
+            Apagar histórico de vendas
+        </button>
+
+    </section>
+
+</div>
+</div>
+
+<script>
+
+let produtos = JSON.parse(localStorage.getItem("produtos")) || [
+    {
+        id: 1,
+        nome: "Heineken Lata",
+        preco: 7.00,
+        estoque: 100
+    },
+    {
+        id: 2,
+        nome: "Corona Long Neck",
+        preco: 8.50,
+        estoque: 100
+    },
+    {
+        id: 3,
+        nome: "Budweiser Long Neck",
+        preco: 7.00,
+        estoque: 100
+    }
+];
+
+let vendas = JSON.parse(localStorage.getItem("vendas")) || [];
+
+let carrinho = [];
+
+let usuarioAtual = "";
+
+function salvarDados() {
+    localStorage.setItem("produtos", JSON.stringify(produtos));
+    localStorage.setItem("vendas", JSON.stringify(vendas));
+}
+
+function entrar() {
+
+    const usuario = document.getElementById("usuario").value.trim();
+    const senha = document.getElementById("senha").value;
+
+    /*
+       ACESSOS INICIAIS
+
+       Administrador:
+       usuário: admin
+       senha: 1234
+
+       Funcionário:
+       usuário: caixa
+       senha: 1234
+    */
+
+    if (usuario === "admin" && senha === "1234") {
+
+        usuarioAtual = "admin";
+
+        document.getElementById("loginScreen").classList.add("hidden");
+        document.getElementById("sistema").classList.remove("hidden");
+
+        document.getElementById("btnAdmin").classList.remove("hidden");
+
+        mostrar("caixa");
+
+    } else if (usuario === "caixa" && senha === "1234") {
+
+        usuarioAtual = "caixa";
+
+        document.getElementById("loginScreen").classList.add("hidden");
+        document.getElementById("sistema").classList.remove("hidden");
+
+        document.getElementById("btnAdmin").classList.add("hidden");
+
+        mostrar("caixa");
+
+    } else {
+
+        document.getElementById("erroLogin").innerText =
+            "Usuário ou senha incorretos.";
+
+    }
+}
+
+function sair() {
+
+    usuarioAtual = "";
+
+    document.getElementById("sistema").classList.add("hidden");
+    document.getElementById("loginScreen").classList.remove("hidden");
+
+    document.getElementById("usuario").value = "";
+    document.getElementById("senha").value = "";
+}
+
+function mostrar(id) {
+
+    const secoes = [
+        "caixa",
+        "produtos",
+        "vendas",
+        "admin"
+    ];
+
+    secoes.forEach(secao => {
+        document.getElementById(secao).classList.add("hidden");
+    });
+
+    document.getElementById(id).classList.remove("hidden");
+
+    if (id === "caixa") listarProdutos();
+    if (id === "produtos") listarTabelaProdutos();
+    if (id === "vendas") listarVendas();
+}
+
+function listarProdutos() {
+
+    const busca =
+        document.getElementById("buscaProduto").value.toLowerCase();
+
+    const div =
+        document.getElementById("listaProdutos");
+
+    div.innerHTML = "";
+
+    produtos
+        .filter(p => p.nome.toLowerCase().includes(busca))
+        .forEach(p => {
+
+            const item = document.createElement("div");
+
+            item.className = "produto";
+
+            item.innerHTML = `
+                <strong>${p.nome}</strong>
+
+                <span class="preco">
+                    R$ ${p.preco.toFixed(2).replace(".", ",")}
+                </span>
+
+                <p class="small">
+                    Estoque: ${p.estoque}
+                </p>
+
+                <button onclick="adicionarCarrinho(${p.id})">
+                    Adicionar
+                </button>
+            `;
+
+            div.appendChild(item);
+        });
+}
+
+function adicionarCarrinho(id) {
+
+    const produto = produtos.find(p => p.id === id);
+
+    if (!produto) return;
+
+    if (produto.estoque <= 0) {
+        alert("Produto sem estoque.");
+        return;
+    }
+
+    const existente = carrinho.find(p => p.id === id);
+
+    if (existente) {
+
+        if (existente.quantidade >= produto.estoque) {
+            alert("Quantidade maior que o estoque.");
+            return;
+        }
+
+        existente.quantidade++;
+
+    } else {
+
+        carrinho.push({
+            id: produto.id,
+            nome: produto.nome,
+            preco: produto.preco,
+            quantidade: 1
+        });
+    }
+
+    atualizarCarrinho();
+}
+
+function removerCarrinho(id) {
+
+    carrinho = carrinho.filter(p => p.id !== id);
+
+    atualizarCarrinho();
+}
+
+function atualizarCarrinho() {
+
+    const div = document.getElementById("carrinho");
+
+    div.innerHTML = "";
+
+    let total = 0;
+
+    if (carrinho.length === 0) {
+
+        div.innerHTML =
+            "<p>Nenhum produto no carrinho.</p>";
+
+    }
+
+    carrinho.forEach(item => {
+
+        const subtotal =
+            item.preco * item.quantidade;
+
+        total += subtotal;
+
+        div.innerHTML += `
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                padding:10px;
+                border-bottom:1px solid #ddd;
+            ">
+
+                <span>
+                    ${item.nome}
+                    <br>
+                    ${item.quantidade} x
+                    R$ ${item.preco.toFixed(2).replace(".", ",")}
+                </span>
+
+                <strong>
+                    R$ ${subtotal.toFixed(2).replace(".", ",")}
+                </strong>
+
+                <button
+                    onclick="removerCarrinho(${item.id})"
+                    style="
+                        width:auto;
+                        padding:7px 10px;
+                        background:#b3261e;
+                    ">
+                    X
+                </button>
+
+            </div>
+        `;
+    });
+
+    document.getElementById("total").innerText =
+        total.toFixed(2).replace(".", ",");
+}
+
+function finalizarVenda() {
+
+    if (carrinho.length === 0) {
+        alert("Adicione produtos ao carrinho.");
+        return;
+    }
+
+    const pagamento =
+        document.getElementById("pagamento").value;
+
+    if (!pagamento) {
+        alert("Escolha a forma de pagamento.");
+        return;
+    }
+
+    let total = 0;
+
+    carrinho.forEach(item => {
+
+        total += item.preco * item.quantidade;
+
+        const produto =
+            produtos.find(p => p.id === item.id);
+
+        if (produto) {
+            produto.estoque -= item.quantidade;
+        }
+    });
+
+    const venda = {
+
+        id: Date.now(),
+
+        data: new Date().toLocaleString("pt-BR"),
+
+        usuario: usuarioAtual,
+
+        pagamento: pagamento,
+
+        itens: [...carrinho],
+
+        total: total
+    };
+
+    vendas.push(venda);
+
+    salvarDados();
+
+    carrinho = [];
+
+    atualizarCarrinho();
+
+    document.getElementById("pagamento").value = "";
+
+    alert(
+        "Venda finalizada com sucesso!\n\n" +
+        "Total: R$ " +
+        total.toFixed(2).replace(".", ",")
+    );
+
+    listarProdutos();
+}
+
+function cadastrarProduto() {
+
+    const nome =
+        document.getElementById("nomeProduto").value.trim();
+
+    const preco =
+        parseFloat(document.getElementById("precoProduto").value);
+
+    const estoque =
+        parseInt(document.getElementById("estoqueProduto").value);
+
+    if (!nome || isNaN(preco) || isNaN(estoque)) {
+
+        alert("Preencha todos os campos.");
+
+        return;
+    }
+
+    produtos.push({
+
+        id: Date.now(),
+
+        nome: nome,
+
+        preco: preco,
+
+        estoque: estoque
+
+    });
+
+    salvarDados();
+
+    document.getElementById("nomeProduto").value = "";
+    document.getElementById("precoProduto").value = "";
+    document.getElementById("estoqueProduto").value = "";
+
+    listarTabelaProdutos();
+
+    alert("Produto cadastrado!");
+}
+
+function listarTabelaProdutos() {
+
+    const div =
+        document.getElementById("tabelaProdutos");
+
+    div.innerHTML = `
+        <table>
+            <tr>
+                <th>Produto</th>
+                <th>Preço</th>
+                <th>Estoque</th>
+            </tr>
+
+            ${produtos.map(p => `
+                <tr>
+                    <td>${p.nome}</td>
+                    <td>
+                        R$ ${p.preco.toFixed(2).replace(".", ",")}
+                    </td>
+                    <td>${p.estoque}</td>
+                </tr>
+            `).join("")}
+
+        </table>
+    `;
+}
+
+function listarVendas() {
+
+    const div =
+        document.getElementById("historico");
+
+    if (vendas.length === 0) {
+
+        div.innerHTML =
+            "<p>Nenhuma venda registrada.</p>";
+
+        return;
+    }
+
+    div.innerHTML = vendas
+        .slice()
+        .reverse()
+        .map(v => `
+
+            <div style="
+                border:1px solid #ddd;
+                padding:15px;
+                border-radius:10px;
+                margin-bottom:10px;
+            ">
+
+                <strong>Venda #${v.id}</strong>
+
+                <p>Data: ${v.data}</p>
+
+                <p>Operador: ${v.usuario}</p>
+
+                <p>Pagamento: ${v.pagamento}</p>
+
+                <p>
+                    Total:
+                    <strong>
+                        R$ ${v.total.toFixed(2).replace(".", ",")}
+                    </strong>
+                </p>
+
+            </div>
+
+        `)
+        .join("");
+}
+
+function limparVendas() {
+
+    if (usuarioAtual !== "admin") {
+        alert("Acesso restrito ao administrador.");
+        return;
+    }
+
+    if (!confirm("Tem certeza que deseja apagar todas as vendas?")) {
+        return;
+    }
+
+    vendas = [];
+
+    salvarDados();
+
+    listarVendas();
+
+    alert("Histórico apagado.");
+}
+
+listarProdutos();
+
+</script>
+
+</body>
+</html>
